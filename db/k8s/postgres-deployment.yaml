@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: postgres
 spec:
-  replicas: 1     # Pod-level HA (reschedule across nodes)
+  replicas: 1     # Pod-level HA (reschedule across the  nodes)
   selector:
     matchLabels:
       app: postgres
