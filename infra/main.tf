@@ -34,7 +34,7 @@ resource "kubernetes_secret_v1" "postgres_secret" {
 }
 
 # -----------------------
-# Optional ConfigMap for App1
+# Optional ConfigMap for App
 # -----------------------
 resource "kubernetes_config_map_v1" "app_config" {
   metadata {
