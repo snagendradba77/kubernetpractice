@@ -1,0 +1,4 @@
+<changeSet id="insert-employee" author="Naga">
+    <sqlFile path="../../scripts/002_insert_data.sql"/>
+</changeSet>
+

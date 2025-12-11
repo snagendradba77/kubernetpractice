@@ -1,0 +1,96 @@
+name: Orchestrated CI/CD Pipeline
+
+on:
+  push:
+    branches: [dev]      # Change to your branch if needed
+    # Optional: remove paths to run on first push
+    paths:
+      - 'infra/**'
+      - 'db/**'
+      - 'app/**'
+
+jobs:
+  orchestrated-deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      # Detect changed files
+      - name: Get changed files
+        id: changes
+        run: |
+          echo "files=$(git diff --name-only HEAD^ HEAD)" >> $GITHUB_OUTPUT
+
+      # Determine if infra changed
+      - name: Check Infra Changes
+        id: infra
+        run: |
+          echo "infra_changed=0" >> $GITHUB_OUTPUT
+          for f in ${{ steps.changes.outputs.files }}; do
+            if [[ $f == infra/** ]]; then
+              echo "infra_changed=1" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
+
+      # Determine if DB changed
+      - name: Check DB Changes
+        id: db
+        run: |
+          echo "db_changed=0" >> $GITHUB_OUTPUT
+          for f in ${{ steps.changes.outputs.files }}; do
+            if [[ $f == db/** ]]; then
+              echo "db_changed=1" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
+
+      # Determine if App changed
+      - name: Check App Changes
+        id: app
+        run: |
+          echo "app_changed=0" >> $GITHUB_OUTPUT
+          for f in ${{ steps.changes.outputs.files }}; do
+            if [[ $f == app/** ]]; then
+              echo "app_changed=1" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
+
+      # ------------------- Deploy Infra -------------------
+      - name: Terraform Init & Apply
+        if: steps.infra.outputs.infra_changed == '1'
+        working-directory: infra
+        run: |
+          terraform init
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan
+
+      # ------------------- Deploy DB -------------------
+      - name: Apply PostgreSQL Manifests
+        if: steps.db.outputs.db_changed == '1'
+        run: |
+          kubectl apply -f db/k8s/
+
+      - name: Run Liquibase Changesets
+        if: steps.db.outputs.db_changed == '1'
+        run: |
+          cd db/changelog
+          liquibase --changeLogFile=changelog-master.xml \
+                    --url=jdbc:postgresql://<postgres-service>:5432/<db_name> \
+                    --username=$DB_USER \
+                    --password=$DB_PASSWORD \
+                    update
+
+      # ------------------- Deploy App -------------------
+      - name: Build & Push Docker Image
+        if: steps.app.outputs.app_changed == '1'
+        run: |
+          docker build -t your_dockerhub/flask-app:latest app/
+          docker push your_dockerhub/flask-app:latest
+
+      - name: Deploy Flask App
+        if: steps.app.outputs.app_changed == '1' || steps.db.outputs.db_changed == '1'
+        run: |
+          kubectl apply -f app/k8s/
+

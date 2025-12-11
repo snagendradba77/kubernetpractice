@@ -1,0 +1,36 @@
+name: Infra Pipeline
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'infra/**'
+
+jobs:
+  terraform:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Detect if any Terraform files changed
+      - name: Get changed files
+        id: changes
+        run: |
+          echo "files=$(git diff --name-only HEAD^ HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Run Terraform Init
+        if: ${{ steps.changes.outputs.files != '' }}
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform Plan
+        if: ${{ steps.changes.outputs.files != '' }}
+        working-directory: infra
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: ${{ steps.changes.outputs.files != '' }}
+        working-directory: infra
+        run: terraform apply -auto-approve tfplan
+

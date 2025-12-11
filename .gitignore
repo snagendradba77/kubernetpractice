@@ -1,0 +1,18 @@
+# Ignore self-hosted GitHub Actions runner
+actions-runner/
+
+# Python
+__pycache__/
+*.pyc
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+
+# Docker
+*.log
+
+# Local secrets
+.env
+

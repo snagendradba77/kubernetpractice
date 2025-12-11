@@ -1,0 +1,61 @@
+name: DB Pipeline
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "db/scripts/**"
+      - "db/changelog/**"
+      - "db/k8s/**"
+
+jobs:
+  db:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get changed files
+        id: changes
+        run: echo "files=$(git diff --name-only HEAD^ HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Filter SQL + Liquibase
+        id: filter
+        run: |
+          sql=""
+          liquibase=""
+          for f in ${{ steps.changes.outputs.files }}; do
+            case "$f" in
+              db/scripts/*.sql) sql="$sql $f" ;;
+              db/changelog/*.xml|db/changelog/**/*.xml) liquibase="$liquibase $f" ;;
+            esac
+          done
+          echo "sql=$sql" >> $GITHUB_OUTPUT
+          echo "liquibase=$liquibase" >> $GITHUB_OUTPUT
+
+      - name: Apply PostgreSQL YAML
+        if: contains(steps.changes.outputs.files, 'db/k8s/')
+        run: kubectl apply -f db/k8s/
+
+      - name: Run Liquibase (only changed)
+        if: ${{ steps.filter.outputs.liquibase != '' }}
+        run: |
+          kubectl port-forward svc/postgres 5432:5432 &
+          sleep 5
+          for f in ${{ steps.filter.outputs.liquibase }}; do
+            liquibase \
+              --changeLogFile="$f" \
+              --url=jdbc:postgresql://localhost:5432/postgres \
+              --username=postgres \
+              --password=StrongPassword123 \
+              update
+          done
+
+      - name: Run SQL scripts (only changed)
+        if: ${{ steps.filter.outputs.sql != '' }}
+        run: |
+          kubectl port-forward svc/postgres 5432:5432 &
+          sleep 5
+          for f in ${{ steps.filter.outputs.sql }}; do
+            PGPASSWORD=StrongPassword123 psql -h localhost -U postgres -d postgres -f "$f"
+          done
+
