@@ -1,0 +1,40 @@
+name: App CI
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  app:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set changed files
+        id: changed
+        run: |
+          git fetch origin
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            files=$(git ls-files app/)
+          else
+            files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- app/)
+          fi
+          echo "files=$files" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        if: steps.changed.outputs.files != ''
+        run: |
+          cd app
+          docker build -t flask-app:latest .
+
+      - name: Load image into Kind
+        if: steps.changed.outputs.files != ''
+        run: |
+          kind load docker-image flask-app:latest
+
+      - name: Deploy Flask app
+        if: steps.changed.outputs.files != ''
+        run: |
+          kubectl apply -f app/k8s/
+
