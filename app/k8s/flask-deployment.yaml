@@ -1,9 +1,10 @@
-apiVersion: apps/v1   #app1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: flask-app
+  namespace: flask-app-ns
 spec:
-  replicas: 1
+  replicas: 1   # You can increase for HA later
   selector:
     matchLabels:
       app: flask-app
@@ -14,12 +15,14 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: your_dockerhub/flask-app:latest
+        image: flask-app:latest  # Replace with your built image
         ports:
         - containerPort: 5000
         env:
           - name: DB_HOST
-            value: postgres
+            value: postgres.db-ns.svc.cluster.local
+          - name: DB_PORT
+            value: "5432"
           - name: DB_USER
             valueFrom:
               secretKeyRef:
@@ -30,4 +33,9 @@ spec:
               secretKeyRef:
                 name: postgres-secret
                 key: POSTGRES_PASSWORD
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secret
+                key: POSTGRES_DB
 

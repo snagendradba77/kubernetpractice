@@ -2,24 +2,44 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
-# Example1: Create a namespace for app and db
-resource "kubernetes_namespace" "app_ns" {
+# -----------------------
+# Namespaces
+# -----------------------
+resource "kubernetes_namespace_v1" "app_ns" {
   metadata {
     name = "flask-app-ns"
   }
 }
 
-resource "kubernetes_namespace" "db_ns" {
+resource "kubernetes_namespace_v1" "db_ns" {
   metadata {
     name = "db-ns"
   }
 }
 
-# Example1 ConfigMap (optional)
-resource "kubernetes_config_map" "app_config" {
+# -----------------------
+# PostgreSQL Secret
+# -----------------------
+resource "kubernetes_secret_v1" "postgres_secret" {
+  metadata {
+    name      = "postgres-secret"
+    namespace = kubernetes_namespace_v1.db_ns.metadata[0].name
+  }
+
+  data = {
+    POSTGRES_USER     = base64encode("postgres")
+    POSTGRES_PASSWORD = base64encode("password")
+    POSTGRES_DB       = base64encode("appdb")
+  }
+}
+
+# -----------------------
+# Optional ConfigMap for App
+# -----------------------
+resource "kubernetes_config_map_v1" "app_config" {
   metadata {
     name      = "app-config"
-    namespace = kubernetes_namespace.app_ns.metadata[0].name
+    namespace = kubernetes_namespace_v1.app_ns.metadata[0].name
   }
 
   data = {

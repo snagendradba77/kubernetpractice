@@ -2,104 +2,78 @@ name: Orchestrated CI/CD
 
 on:
   push:
-    branches: [dev]
+    branches:
+      - dev
+    paths:
+      - 'infra/**'
+      - 'db/**'
+      - 'app/**'
 
 jobs:
-  # -----------------------
-  # 1️⃣ Infrastructure Job
-  # -----------------------
-  infra:
-    name: Infrastructure
+  orchestrated-deploy:
     runs-on: self-hosted
-    outputs:
-      infra-changed: ${{ steps.check.outputs.changed }}
+    environment: dev
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    # 1️⃣ Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Check infra folder changes
-        id: check
-        run: |
-          git fetch origin
-          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
-            files=$(git ls-files infra/)
-          else
-            files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- infra/)
-          fi
-          echo "changed=$files" >> $GITHUB_OUTPUT
+    # 2️⃣ Setup kubectl
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
 
-      - name: Apply Terraform
-        if: steps.check.outputs.changed != ''
-        run: |
-          cd infra
-          terraform init
-          terraform apply -auto-approve
+    # 3️⃣ Terraform Init
+    - name: Terraform Init
+      working-directory: infra
+      run: terraform init
 
-  # -----------------------
-  # 2️⃣ Database Job
-  # -----------------------
-  db:
-    name: Database
-    runs-on: self-hosted
-    needs: infra
-    outputs:
-      db-changed: ${{ steps.check.outputs.changed }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    # 4️⃣ Terraform Apply
+    - name: Terraform Apply
+      working-directory: infra
+      run: terraform apply -auto-approve
 
-      - name: Check db folder changes
-        id: check
-        run: |
-          git fetch origin
-          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
-            files=$(git ls-files db/)
-          else
-            files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- db/)
-          fi
-          echo "changed=$files" >> $GITHUB_OUTPUT
+    # 5️⃣ Apply PostgreSQL PVC
+    - name: Apply PostgreSQL PVC
+      run: kubectl apply -f db/k8s/postgres-pvc.yaml
 
-      - name: Run Liquibase migrations
-        if: steps.check.outputs.changed != ''
-        run: |
-          cd db
-          liquibase --changeLogFile=changelog/changelog-master.xml update
+    # 6️⃣ Apply PostgreSQL Secret
+    - name: Apply PostgreSQL Secret
+      run: kubectl apply -f db/k8s/postgres-secret.yaml
 
-  # -----------------------
-  # 3️⃣ Application Job
-  # -----------------------
-  app:
-    name: Application
-    runs-on: self-hosted
-    needs: db
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    # 7️⃣ Apply PostgreSQL Deployment
+    - name: Apply PostgreSQL Deployment
+      run: kubectl apply -f db/k8s/postgres-deployment.yaml
 
-      - name: Check app folder changes
-        id: check
-        run: |
-          git fetch origin
-          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
-            files=$(git ls-files app/)
-          else
-            files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- app/)
-          fi
-          echo "changed=$files" >> $GITHUB_OUTPUT
+    # 8️⃣ Apply PostgreSQL Service
+    - name: Apply PostgreSQL Service
+      run: kubectl apply -f db/k8s/postgres-service.yaml
 
-      - name: Build Docker image
-        if: steps.check.outputs.changed != ''
-        run: |
-          cd app
-          docker build -t flask-app:latest .
+    # 9️⃣ Run Liquibase migrations
+    - name: Run Liquibase Migrations
+      working-directory: db
+      run: |
+        liquibase --changeLogFile=changelog/changelog-master.xml \
+                  --url=jdbc:postgresql://postgres.db-ns.svc.cluster.local:5432/appdb \
+                  --username=$POSTGRES_USER \
+                  --password=$POSTGRES_PASSWORD \
+                  update
 
-      - name: Load Docker image into Kind
-        if: steps.check.outputs.changed != ''
-        run: |
-          kind load docker-image flask-app:latest
+    # 🔟 Build Flask Docker image
+    - name: Build Flask Docker Image
+      run: docker build -t flask-app:latest ./app
 
-      - name: Deploy Flask app
-        if: steps.check.outputs.changed != ''
-        run: |
-          kubectl apply -f app/k8s/
+    # 1️⃣1️⃣ Apply Flask Deployment
+    - name: Apply Flask Deployment
+      run: kubectl apply -f app/k8s/flask-deployment.yaml
+
+    # 1️⃣2️⃣ Apply Flask Service
+    - name: Apply Flask Service
+      run: kubectl apply -f app/k8s/flask-service.yaml
+
+    # 1️⃣3️⃣ Verify Pods
+    - name: Verify Pods
+      run: kubectl get pods -n db-ns && kubectl get pods -n flask-app-ns
 

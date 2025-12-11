@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
+  namespace: db-ns
 spec:
-  replicas: 1     # Pod-level HA (reschedule across  nodes)
+  replicas: 1   # Pod-level HA; pod can reschedule if node fails
   selector:
     matchLabels:
       app: postgres
@@ -28,6 +29,11 @@ spec:
               secretKeyRef:
                 name: postgres-secret
                 key: POSTGRES_PASSWORD
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secret
+                key: POSTGRES_DB
         volumeMounts:
           - name: postgres-storage
             mountPath: /var/lib/postgresql/data

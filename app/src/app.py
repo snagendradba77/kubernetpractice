@@ -1,22 +1,39 @@
-from flask import Flask
+from flask import Flask, jsonify
 import psycopg2
 import os
 
 app = Flask(__name__)
 
-def get_db():
-    return psycopg2.connect(
-        host=os.getenv("DB_HOST", "postgres"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", "StrongPassword123"),
-        dbname="postgres"
-    )
+# Database connection parameters from environment variables
+DB_HOST = os.getenv('DB_HOST', 'postgres.db-ns.svc.cluster.local')
+DB_PORT = os.getenv('DB_PORT', 5432)
+DB_USER = os.getenv('DB_USER', 'postgres')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'StrongPassword123')
+DB_NAME = os.getenv('DB_NAME', 'appdb')
 
-@app.route("/")
-def home():
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT version();")
-    result = cur.fetchone()
-    return f"Postgres Version: {result[0]}"
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        dbname=DB_NAME
+    )
+    return conn
+
+@app.route('/')
+def index():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT NOW();')
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        return jsonify({"status": "success", "time": str(result[0])})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
 
