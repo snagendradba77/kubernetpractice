@@ -2,7 +2,7 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
-# Example: Create a namespace for app and db
+# Example1: Create a namespace for app and db
 resource "kubernetes_namespace" "app_ns" {
   metadata {
     name = "flask-app-ns"
@@ -15,7 +15,7 @@ resource "kubernetes_namespace" "db_ns" {
   }
 }
 
-# Example ConfigMap (optional)
+# Example1 ConfigMap (optional)
 resource "kubernetes_config_map" "app_config" {
   metadata {
     name      = "app-config"
