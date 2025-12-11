@@ -56,7 +56,7 @@ jobs:
       working-directory: db
       run: |
         liquibase --changeLogFile=changelog/changelog-master.xml \
-                  --url=jdbc:postgresql://postgres.db-ns.svc.cluster.local:5432/appdb \
+                  --url=jdbc:postgresql://localhost:30042/appdb \
                   --username=$POSTGRES_USER \
                   --password=$POSTGRES_PASSWORD \
                   update
