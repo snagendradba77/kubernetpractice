@@ -1,96 +1,105 @@
-name: Orchestrated CI/CD Pipeline
+name: Orchestrated CI/CD
 
 on:
   push:
-    branches: [dev]      # Change to your branch if needed
-    # Optional: remove paths to run on first push
-    paths:
-      - 'infra/**'
-      - 'db/**'
-      - 'app/**'
+    branches: [dev]
 
 jobs:
-  orchestrated-deploy:
+  # -----------------------
+  # 1️⃣ Infrastructure Job
+  # -----------------------
+  infra:
+    name: Infrastructure
     runs-on: self-hosted
+    outputs:
+      infra-changed: ${{ steps.check.outputs.changed }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # Detect changed files
-      - name: Get changed files
-        id: changes
+      - name: Check infra folder changes
+        id: check
         run: |
-          echo "files=$(git diff --name-only HEAD^ HEAD)" >> $GITHUB_OUTPUT
+          git fetch origin
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            files=$(git ls-files infra/)
+          else
+            files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- infra/)
+          fi
+          echo "changed=$files" >> $GITHUB_OUTPUT
 
-      # Determine if infra changed
-      - name: Check Infra Changes
-        id: infra
+      - name: Apply Terraform
+        if: steps.check.outputs.changed != ''
         run: |
-          echo "infra_changed=0" >> $GITHUB_OUTPUT
-          for f in ${{ steps.changes.outputs.files }}; do
-            if [[ $f == infra/** ]]; then
-              echo "infra_changed=1" >> $GITHUB_OUTPUT
-              break
-            fi
-          done
-
-      # Determine if DB changed
-      - name: Check DB Changes
-        id: db
-        run: |
-          echo "db_changed=0" >> $GITHUB_OUTPUT
-          for f in ${{ steps.changes.outputs.files }}; do
-            if [[ $f == db/** ]]; then
-              echo "db_changed=1" >> $GITHUB_OUTPUT
-              break
-            fi
-          done
-
-      # Determine if App changed
-      - name: Check App Changes
-        id: app
-        run: |
-          echo "app_changed=0" >> $GITHUB_OUTPUT
-          for f in ${{ steps.changes.outputs.files }}; do
-            if [[ $f == app/** ]]; then
-              echo "app_changed=1" >> $GITHUB_OUTPUT
-              break
-            fi
-          done
-
-      # ------------------- Deploy Infra -------------------
-      - name: Terraform Init & Apply
-        if: steps.infra.outputs.infra_changed == '1'
-        working-directory: infra
-        run: |
+          cd infra
           terraform init
-          terraform plan -out=tfplan
-          terraform apply -auto-approve tfplan
+          terraform apply -auto-approve
 
-      # ------------------- Deploy DB -------------------
-      - name: Apply PostgreSQL Manifests
-        if: steps.db.outputs.db_changed == '1'
+  # -----------------------
+  # 2️⃣ Database Job
+  # -----------------------
+  db:
+    name: Database
+    runs-on: self-hosted
+    needs: infra
+    outputs:
+      db-changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check db folder changes
+        id: check
         run: |
-          kubectl apply -f db/k8s/
+          git fetch origin
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            files=$(git ls-files db/)
+          else
+            files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- db/)
+          fi
+          echo "changed=$files" >> $GITHUB_OUTPUT
 
-      - name: Run Liquibase Changesets
-        if: steps.db.outputs.db_changed == '1'
+      - name: Run Liquibase migrations
+        if: steps.check.outputs.changed != ''
         run: |
-          cd db/changelog
-          liquibase --changeLogFile=changelog-master.xml \
-                    --url=jdbc:postgresql://<postgres-service>:5432/<db_name> \
-                    --username=$DB_USER \
-                    --password=$DB_PASSWORD \
-                    update
+          cd db
+          liquibase --changeLogFile=changelog/changelog-master.xml update
 
-      # ------------------- Deploy App -------------------
-      - name: Build & Push Docker Image
-        if: steps.app.outputs.app_changed == '1'
+  # -----------------------
+  # 3️⃣ Application Job
+  # -----------------------
+  app:
+    name: Application
+    runs-on: self-hosted
+    needs: db
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check app folder changes
+        id: check
         run: |
-          docker build -t your_dockerhub/flask-app:latest app/
-          docker push your_dockerhub/flask-app:latest
+          git fetch origin
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            files=$(git ls-files app/)
+          else
+            files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} -- app/)
+          fi
+          echo "changed=$files" >> $GITHUB_OUTPUT
 
-      - name: Deploy Flask App
-        if: steps.app.outputs.app_changed == '1' || steps.db.outputs.db_changed == '1'
+      - name: Build Docker image
+        if: steps.check.outputs.changed != ''
+        run: |
+          cd app
+          docker build -t flask-app:latest .
+
+      - name: Load Docker image into Kind
+        if: steps.check.outputs.changed != ''
+        run: |
+          kind load docker-image flask-app:latest
+
+      - name: Deploy Flask app
+        if: steps.check.outputs.changed != ''
         run: |
           kubectl apply -f app/k8s/
 
