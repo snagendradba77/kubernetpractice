@@ -1,0 +1,45 @@
+{
+  "version": 4,
+  "terraform_version": "1.14.1",
+  "serial": 7,
+  "lineage": "f9ef9fdd-37cf-c3eb-36ac-5f22b1ed11bc",
+  "outputs": {},
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "kubernetes_namespace_v1",
+      "name": "db_ns",
+      "provider": "provider[\"registry.terraform.io/hashicorp/kubernetes\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "db-ns",
+            "metadata": [
+              {
+                "annotations": {},
+                "generate_name": "",
+                "generation": 0,
+                "labels": {},
+                "name": "db-ns",
+                "resource_version": "37569",
+                "uid": "28956727-702c-4e9f-a18a-527c75610918"
+              }
+            ],
+            "timeouts": null,
+            "wait_for_default_service_account": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 1,
+          "identity": {
+            "api_version": "v1",
+            "kind": "Namespace",
+            "name": "db-ns"
+          },
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiZGVsZXRlIjozMDAwMDAwMDAwMDB9LCJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}
