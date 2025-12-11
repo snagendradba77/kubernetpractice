@@ -3,7 +3,7 @@ provider "kubernetes" {
 }
 
 # -------------------------------
-# Namespaces
+# Namespaces1
 # -------------------------------
 resource "kubernetes_namespace_v1" "app_ns" {
   metadata {
