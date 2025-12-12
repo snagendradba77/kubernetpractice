@@ -6,12 +6,29 @@ provider "kubernetes" {
 }
 
 # -------------------------------
+# Namespaces
+# (Already exist and are imported)
+# -------------------------------
+resource "kubernetes_namespace_v1" "app_ns" {
+  metadata {
+    name = "flask-app-ns"
+  }
+}
+
+resource "kubernetes_namespace_v1" "db_ns" {
+  metadata {
+    name = "db-ns"
+  }
+}
+
+# -------------------------------
 # ConfigMap for Flask App
+# (Already exists, imported)
 # -------------------------------
 resource "kubernetes_config_map_v1" "app_config" {
   metadata {
     name      = "app-config"
-    namespace = "flask-app-ns"  # reference existing namespace directly
+    namespace = kubernetes_namespace_v1.app_ns.metadata[0].name
   }
 
   data = {
@@ -21,11 +38,12 @@ resource "kubernetes_config_map_v1" "app_config" {
 
 # -------------------------------
 # Secret for PostgreSQL
+# (Already exists, imported)
 # -------------------------------
 resource "kubernetes_secret_v1" "postgres_secret" {
   metadata {
     name      = "postgres-secret"
-    namespace = "db-ns"  # reference existing namespace directly
+    namespace = kubernetes_namespace_v1.db_ns.metadata[0].name
   }
 
   type = "Opaque"
