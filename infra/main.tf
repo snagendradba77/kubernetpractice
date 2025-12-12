@@ -1,9 +1,13 @@
+# -------------------------------
+# Provider
+# -------------------------------
 provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
 # -------------------------------
 # Namespaces
+# (Already imported into Terraform)
 # -------------------------------
 resource "kubernetes_namespace_v1" "app_ns" {
   metadata {
