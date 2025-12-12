@@ -6,7 +6,7 @@ provider "kubernetes" {
 resource "kubernetes_config_map_v1" "app_config" {
   metadata {
     name      = "app-config"
-    namespace = "flask-app-ns"  # existing namespace
+    namespace = "flask-app-ns"  # existing namespace1
   }
 
   data = {
