@@ -19,8 +19,8 @@ jobs:
           echo "Installing Liquibase..."
           curl -L https://github.com/liquibase/liquibase/releases/download/v4.27.0/liquibase-4.27.0.tar.gz -o liquibase.tar.gz
           tar -xzf liquibase.tar.gz
-          sudo mv liquibase /usr/local/bin/
-          sudo chmod +x /usr/local/bin/liquibase
+          mv liquibase /usr/local/bin/
+          chmod +x /usr/local/bin/liquibase
           liquibase --version
 
       # Run Liquibase migrations on postgres DB
