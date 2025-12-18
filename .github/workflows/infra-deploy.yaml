@@ -1,0 +1,19 @@
+on:
+  push:
+    branches: [dev]
+    paths: [infra/**]
+
+jobs:
+  infra:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - run: kubectl apply -f infra/k8s/namespace.yaml
+      - run: |
+          kubectl create secret generic postgres-secret \
+          -n db \
+          --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
+          --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
+          --dry-run=client -o yaml | kubectl apply -f -
+      - run: kubectl apply -f infra/k8s
+
