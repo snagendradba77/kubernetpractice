@@ -10,28 +10,18 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      # Checkout source code
-      - uses: actions/checkout@v3
+      - name: Checkout source code
+        uses: actions/checkout@v3
 
-      # Install Liquibase
-      - name: Install Liquibase
+      - name: Run Liquibase migrations (Docker)
         run: |
-          echo "Installing Liquibase..."
-          curl -L https://github.com/liquibase/liquibase/releases/download/v4.27.0/liquibase-4.27.0.tar.gz -o liquibase.tar.gz
-          tar -xzf liquibase.tar.gz
-          mv liquibase /usr/local/bin/
-          chmod +x /usr/local/bin/liquibase
-          liquibase --version
-
-      # Run Liquibase migrations on postgres DB
-      - name: Run Liquibase migrations
-        run: |
-          echo "Running Liquibase migrations on postgres database..."
-          liquibase \
+          echo "Running Liquibase migrations using Docker..."
+          docker run --rm \
+            -v ${{ github.workspace }}:/liquibase/changelog \
+            liquibase/liquibase:4.27.0 \
             --url="jdbc:postgresql://postgres.db.svc.cluster.local:5431/postgres" \
             --username="${{ secrets.POSTGRES_USER }}" \
             --password="${{ secrets.POSTGRES_PASSWORD }}" \
             --changeLogFile=db/changelog/db.changelog-master.xml \
             update
-
 
