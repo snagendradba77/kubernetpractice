@@ -14,7 +14,7 @@ spec:
           image: liquibase/liquibase:4.27.0
           volumeMounts:
             - name: changelog-volume
-              mountPath: /liquibase/changelog
+              mountPath: /liquibase/changelog1
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -34,7 +34,7 @@ spec:
                 --url=jdbc:postgresql://postgres:5431/postgres \
                 --username=$POSTGRES_USER \
                 --password=$POSTGRES_PASSWORD \
-                --changeLogFile=/liquibase/changelog/master.xml \
+                --changeLogFile=/liquibase/changelog1/master.xml \
                 update
       volumes:
         - name: changelog-volume
