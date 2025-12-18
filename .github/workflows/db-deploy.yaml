@@ -1,0 +1,20 @@
+on:
+  push:
+    branches: [dev]
+    paths: [db/**]
+
+jobs:
+  db:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          kubectl -n db port-forward svc/postgres 5431:5431 &
+          sleep 8
+          liquibase \
+            --url="jdbc:postgresql://localhost:5431/appdb" \
+            --username="${{ secrets.POSTGRES_USER }}" \
+            --password="${{ secrets.POSTGRES_PASSWORD }}" \
+            --changeLogFile=db/changelog/db.changelog-master.xml \
+            update
+
