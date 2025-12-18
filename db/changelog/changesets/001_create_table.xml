@@ -1,4 +1,0 @@
-<changeSet id="create-employee" author="naga">
-    <sqlFile path="../../scripts/001_create_table.sql"/>
-</changeSet>
-
