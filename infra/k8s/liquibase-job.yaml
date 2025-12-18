@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: liquibase-migrate
+  namespace: db
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: liquibase
+          image: liquibase/liquibase:4.27.0
+          volumeMounts:
+            - name: changelog-volume
+              mountPath: /liquibase/changelog
+          env:
+            - name: LIQUIBASE_URL
+              value: jdbc:postgresql://postgres:5431/postgres
+            - name: LIQUIBASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: LIQUIBASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+          command: ["liquibase", "update"]
+      volumes:
+        - name: changelog-volume
+          configMap:
+            name: liquibase-changelog
+
