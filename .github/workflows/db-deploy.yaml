@@ -1,3 +1,5 @@
+name: Database Migration
+
 on:
   push:
     branches: [dev]
@@ -6,15 +8,30 @@ on:
 jobs:
   db:
     runs-on: self-hosted
+
     steps:
+      # Checkout source code
       - uses: actions/checkout@v3
-      - run: |
-          kubectl -n db port-forward svc/postgres 5431:5431 &
-          sleep 8
+
+      # Install Liquibase
+      - name: Install Liquibase
+        run: |
+          echo "Installing Liquibase..."
+          curl -L https://github.com/liquibase/liquibase/releases/download/v4.27.0/liquibase-4.27.0.tar.gz -o liquibase.tar.gz
+          tar -xzf liquibase.tar.gz
+          sudo mv liquibase /usr/local/bin/
+          sudo chmod +x /usr/local/bin/liquibase
+          liquibase --version
+
+      # Run Liquibase migrations on postgres DB
+      - name: Run Liquibase migrations
+        run: |
+          echo "Running Liquibase migrations on postgres database..."
           liquibase \
-            --url="jdbc:postgresql://localhost:5431/appdb" \
+            --url="jdbc:postgresql://postgres.db.svc.cluster.local:5431/postgres" \
             --username="${{ secrets.POSTGRES_USER }}" \
             --password="${{ secrets.POSTGRES_PASSWORD }}" \
             --changeLogFile=db/changelog/db.changelog-master.xml \
             update
+
 
