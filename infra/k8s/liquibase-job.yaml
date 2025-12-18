@@ -22,13 +22,23 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
-                  key: username
+                  key: POSTGRES_USER
             - name: LIQUIBASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
-                  key: password
-          command: ["liquibase", "update"]
+                  key: POSTGRES_PASSWORD
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for Postgres..."
+              until pg_isready -h postgres.db.svc.cluster.local -p 5431 -U $LIQUIBASE_USERNAME; do
+                echo "Postgres not ready, sleeping 5s..."
+                sleep 5
+              done
+              echo "Postgres ready. Running Liquibase..."
+              liquibase update
       volumes:
         - name: changelog-volume
           configMap:

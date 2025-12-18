@@ -23,20 +23,15 @@ jobs:
             --from-file=db/scripts \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      # Optional Step 3: Delete old Liquibase Job manually before running
-      # - name: Delete old Liquibase Job
-      #   run: kubectl -n db delete job liquibase-migrate --ignore-not-found
-
-      # Step 4: Apply Liquibase Job
+      # Step 3: Apply Liquibase Job from infra/k8s
       - name: Run Liquibase Job
         run: |
-          kubectl apply -f infra/k8s/liquibase-job.yaml
+          kubectl -n db apply -f infra/k8s/liquibase-job.yaml
           kubectl -n db wait --for=condition=complete job/liquibase-migrate --timeout=300s
 
-      # Step 5: Show Liquibase logs
+      # Step 4: Show Liquibase logs
       - name: Show Liquibase logs
         if: always()
         run: |
           kubectl -n db logs job/liquibase-migrate
-
 
