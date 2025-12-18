@@ -5,6 +5,7 @@ metadata:
   namespace: db
 spec:
   backoffLimit: 1
+  ttlSecondsAfterFinished: 60
   template:
     spec:
       restartPolicy: Never
@@ -25,16 +26,12 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
-          command:
-            - /bin/sh
-            - -c
-            - |
-              liquibase \
-                --url=jdbc:postgresql://postgres:5431/postgres \
-                --username=$POSTGRES_USER \
-                --password=$POSTGRES_PASSWORD \
-                --changeLogFile=/liquibase/master.xml \
-                update
+          args:
+            - --url=jdbc:postgresql://postgres:5431/postgres
+            - --username=$(POSTGRES_USER)
+            - --password=$(POSTGRES_PASSWORD)
+            - --changeLogFile=/liquibase/master.xml
+            - update
       volumes:
         - name: changelog-volume
           configMap:
