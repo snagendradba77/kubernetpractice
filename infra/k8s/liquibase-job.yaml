@@ -4,7 +4,6 @@ metadata:
   name: liquibase-migrate
   namespace: db
 spec:
-  ttlSecondsAfterFinished: 300
   backoffLimit: 1
   template:
     spec:
@@ -16,19 +15,26 @@ spec:
             - name: changelog-volume
               mountPath: /liquibase/changelog
           env:
-            - name: LIQUIBASE_URL
-              value: jdbc:postgresql://postgres:5431/postgres
-            - name: LIQUIBASE_USERNAME
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_USER
-            - name: LIQUIBASE_PASSWORD
+            - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
-          command: ["liquibase", "update"]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              liquibase \
+                --url=jdbc:postgresql://postgres:5431/postgres \
+                --username=$POSTGRES_USER \
+                --password=$POSTGRES_PASSWORD \
+                --changeLogFile=/liquibase/changelog/db.changelog-master.xml \
+                update
       volumes:
         - name: changelog-volume
           configMap:
