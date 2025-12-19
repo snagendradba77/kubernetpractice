@@ -16,3 +16,4 @@ infra/*.tfstate.backup
 # Local secrets
 .env
 
+.github/workflows/*.swp
