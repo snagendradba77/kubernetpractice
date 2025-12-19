@@ -1,2 +1,2 @@
--- create new  database1
+-- create new  database
 CREATE DATABASE IF NOT EXISTS appdb;
