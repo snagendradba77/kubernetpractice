@@ -3,7 +3,7 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="001" author="naga">
+    <changeSet id="001" author="naga" runInTransaction="false">
         <sqlFile path="001-create-db.sql" relativeToChangelogFile="true"/>
     </changeSet>
 
