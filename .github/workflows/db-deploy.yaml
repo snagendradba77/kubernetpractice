@@ -11,29 +11,25 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      # Step 1: Checkout source code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Create or update Liquibase ConfigMap
+      # 🔥 MUST DELETE JOB FIRST
+      - name: Delete old Liquibase Job
+        run: |
+          kubectl -n db delete job liquibase-migrate --ignore-not-found
+
       - name: Apply Liquibase ConfigMap
         run: |
           kubectl -n db create configmap liquibase-changelog \
             --from-file=db/changelog \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      # Step 3: Delete old Liquibase Job if exists
-      - name: Delete old Liquibase Job
-        run: |
-          kubectl -n db delete job liquibase-migrate --ignore-not-found
-
-      # Step 4: Apply Liquibase Job
       - name: Run Liquibase Job
         run: |
-          kubectl apply -f infra/k8s
+          kubectl apply -f db/liquibase-job.yaml
           kubectl -n db wait --for=condition=complete job/liquibase-migrate --timeout=300s
 
-      # Step 5: Show Liquibase logs
       - name: Show Liquibase logs
         if: always()
         run: |
