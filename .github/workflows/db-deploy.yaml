@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Python App CI/CD
 
 on:
   push:
@@ -22,8 +22,14 @@ jobs:
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/python-app:latest
 
-      - name: Validate Kubernetes manifests
-        run: kubectl apply --dry-run=client -f app/k8s
+      # Create/Update postgres-secret from GitHub Secrets
+      - name: Create/Update postgres-secret
+        run: |
+          kubectl create secret generic postgres-secret \
+            -n db \
+            --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
+            --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Apply Kubernetes manifests
         run: kubectl apply -f app/k8s
