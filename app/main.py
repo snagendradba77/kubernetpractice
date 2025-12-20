@@ -20,7 +20,11 @@ def hello():
 
 @app.route("/insert_user", methods=["POST"])
 def insert_user():
-    data = request.json or {}
+
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
     username = data.get("username")
     email = data.get("email")
 
