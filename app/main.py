@@ -54,6 +54,17 @@ def list_users():
         for r in rows
     ])
 
+    # 👇 Add this new route in main.py
+@app.route("/form", methods=["GET"])
+def form():
+    return '''
+        <form action="/insert_user" method="post">
+            <input name="username" placeholder="Username">
+            <input name="email" placeholder="Email">
+            <button type="submit">Add User</button>
+        </form>
+    '''
+
 if __name__ == "__main__":
     print("Starting Flask on 0.0.0.0:5000")
     app.run(host="0.0.0.0", port=5000)
