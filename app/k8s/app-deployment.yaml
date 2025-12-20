@@ -16,6 +16,7 @@ spec:
       containers:
       - name: python-app
         image: snagendradba77/python-app:latest
+        imagePullPolicy: Always  
         ports:
           - containerPort: 5000
         env:
