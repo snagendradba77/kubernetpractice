@@ -8,7 +8,8 @@ spec:
     app: python-app
   ports:
     - protocol: TCP
-      port: 5000
-      targetPort: 5000
-  type: ClusterIP
+      port: 5000        # Service port
+      targetPort: 5000  # Container port
+      nodePort: 30080   # External port (must be in 30000–32767 range)
+  type: NodePort
 
