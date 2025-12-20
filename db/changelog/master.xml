@@ -9,7 +9,7 @@
 
 <!-- New changeset using SQL script -->
     <changeSet id="002" author="naga">
-        <sqlFile path="002-create-users.sql" relativeToChangelogFile="true"/>
+        <sqlFile path="002-create-table.sql" relativeToChangelogFile="true"/>
     </changeSet>
 
 </databaseChangeLog>
