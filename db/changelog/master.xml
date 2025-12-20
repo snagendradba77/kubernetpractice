@@ -5,6 +5,11 @@
 
     <changeSet id="001" author="naga" runInTransaction="false">
         <sqlFile path="001-create-db.sql" relativeToChangelogFile="true"/>
+</changeSet> 
+
+<!-- New changeset using SQL script -->
+    <changeSet id="002" author="naga">
+        <sqlFile path="002-create-users.sql" relativeToChangelogFile="true"/>
     </changeSet>
 
 </databaseChangeLog>
