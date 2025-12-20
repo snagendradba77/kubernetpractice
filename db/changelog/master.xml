@@ -6,7 +6,12 @@
 <!-- New changeset using SQL script -->
     <changeSet id="002" author="naga">
         <sqlFile path="002-create-table.sql" relativeToChangelogFile="true"/>
-    </changeSet>
+</changeSet>
+
+<changeSet id="003" author="naga">
+    <sqlFile path="003-insert-users.sql" relativeToChangelogFile="true"/>
+</changeSet>
+
 
 </databaseChangeLog>
 
