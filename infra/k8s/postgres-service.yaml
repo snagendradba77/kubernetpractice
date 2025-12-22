@@ -6,8 +6,10 @@ metadata:
 spec:
   selector:
     app: postgres
+  type: LoadBalancer   # or NodePort if preferred
   ports:
-    - port: 5431
-      targetPort: 5431
+    - port: 5431       # external port
+      targetPort: 5432 # container port
+      protocol: TCP
       name: postgres
 
