@@ -1,0 +1,25 @@
+# Create the k3d cluster
+
+
+k3d cluster create pgcluster \
+  --agents 1 \
+  --k3s-arg "--disable=traefik@server:*"
+
+  #How to add a second worker node in k3d
+
+
+k3d node create pgcluster-agent-1 --cluster pgcluster --role agent
+
+
+#Install NFS provisioner via Helm with correct host + mount options
+
+helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+helm repo update
+
+helm install nfs-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+  --namespace default \
+  --set nfs.server=host.k3d.internal \
+  --set nfs.path=/srv/nfs/postgres \
+  --set storageClass.name=nfs-client \
+  --set storageClass.defaultClass=true \
+  --set nfs.mountOptions="{vers=3,nolock}"
