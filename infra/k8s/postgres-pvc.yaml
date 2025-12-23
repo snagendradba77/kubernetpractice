@@ -1,4 +1,3 @@
-# This is PV deployment
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -10,5 +9,5 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  volumeName: postgres-pv       # bind to the PV defined above
+  volumeName: postgres-pv  # bind to the PV defined above
 
