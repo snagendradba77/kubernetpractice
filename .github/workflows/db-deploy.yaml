@@ -3,7 +3,7 @@ name: Python App CI/CD
 on:
   push:
     branches: [ "dev" ]        # runs when you push to dev branch
-    paths: [ "app/**" ]        # only triggers if files under app/ change
+    paths: [ "db/**" ]        # only triggers if files under app/ change
 
 jobs:
   build-and-deploy:
