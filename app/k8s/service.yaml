@@ -5,11 +5,11 @@ metadata:
   namespace: db
 spec:
   selector:
-    app: python-app
+    app: python-app   # must match Deployment labels
   ports:
     - protocol: TCP
-      port: 5000        # Service port
-      targetPort: 5000  # Container port
-      nodePort: 30080   # External port (must be in 30000–32767 range)
+      port: 5000        # Service port (inside cluster)
+      targetPort: 5000  # Container port (Flask app)
+      nodePort: 30080   # External port (optional, can be auto-assigned)
   type: NodePort
 
