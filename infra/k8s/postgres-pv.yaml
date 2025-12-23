@@ -8,7 +8,8 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-client
   nfs:
-    server: 172.17.0.1       # NFS server IP
-    path: /srv/nfs/postgres  # exported directory
+    server: 192.168.1.40   # <-- use your host NIC IP
+    path: /srv/nfs/postgres
 
