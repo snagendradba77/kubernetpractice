@@ -19,7 +19,7 @@ spec:
         - name: liquibase
           image: liquibase/liquibase:4.27.0
           args:
-            - --url=jdbc:postgresql://postgres:5431/appdb
+            - --url=jdbc:postgresql://postgres:5432/appdb
             - --username=$(POSTGRES_USER)
             - --password=$(POSTGRES_PASSWORD)
             - --searchPath=/changelog
