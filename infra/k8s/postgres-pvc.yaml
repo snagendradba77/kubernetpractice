@@ -5,10 +5,9 @@ metadata:
   namespace: db
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteOnce   # or ReadWriteMany if multiple pods need access
   resources:
     requests:
       storage: 1Gi
   storageClassName: nfs-client
-  volumeName: postgres-pv
 
