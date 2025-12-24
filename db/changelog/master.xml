@@ -12,6 +12,14 @@
     <sqlFile path="003-insert-users.sql" relativeToChangelogFile="true"/>
 </changeSet>
 
+<changeSet id="004" author="naga">
+    <sqlFile path="004-create-emp.sql" relativeToChangelogFile="true"/>
+</changeSet>
+
+<changeSet id="005" author="naga">
+    <sqlFile path="005-insert-emp.sql" relativeToChangelogFile="true"/>
+</changeSet>
+
 
 </databaseChangeLog>
 
