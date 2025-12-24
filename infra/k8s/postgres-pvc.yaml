@@ -5,7 +5,7 @@ metadata:
   namespace: db
 spec:
   accessModes:
-    - ReadWriteOnce   # or ReadWriteMany if multiple pods need access
+    - ReadWriteMany   # NFS provisioner requires RWX
   resources:
     requests:
       storage: 1Gi
