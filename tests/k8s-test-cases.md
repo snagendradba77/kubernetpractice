@@ -5,6 +5,7 @@
 |--------------|-------|-------|-----------------|
 | CL-001 | Verify cluster nodes are healthy | Run `kubectl get nodes` | All nodes show status = Ready |
 | CL-002 | Verify namespace exists | Run `kubectl get namespaces | grep db` | Namespace `db` is listed |
+| CL-003 | Sanity check cluster access | Run `kubectl cluster-info` | Cluster info is displayed (API server and DNS reachable) |
 
 ## Storage Tests
 | Test Case ID | Title | Steps | Expected Result |

@@ -10,7 +10,7 @@ on:
 
 jobs:
   k8s-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repository
@@ -22,8 +22,14 @@ jobs:
           version: 'latest'
 
       - name: Configure kubeconfig
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_CONTENT }}
         run: |
+          mkdir -p $HOME/.kube
           echo "$KUBECONFIG_CONTENT" > $HOME/.kube/config
+
+      - name: Sanity check cluster access
+        run: kubectl cluster-info
 
       # 🔹 Cluster Tests
       - name: Verify cluster nodes are healthy
