@@ -1,4 +1,4 @@
-## Kubernetes Project Test Cases
+# Kubernetes Project Test Cases
 
 ## Cluster Tests
 | Test Case ID | Title | Steps | Expected Result |
@@ -23,6 +23,5 @@
 | Test Case ID | Title | Steps | Expected Result |
 |--------------|-------|-------|-----------------|
 | APP-001 | Verify service exposes app | Run `kubectl get svc -n db | grep python-app-service` | Service is listed |
-| APP-002 | Verify app responds via port-forward | 1. Run `kubectl port-forward svc/python-app-service -n db 5000:5000` 2. Run `curl http://localhost:5000/` | App returns valid response |
-| APP-003 | Verify app inserts data into DB | 1. Run `curl http://localhost:5000/add?record=test` 2. Run `kubectl -n db exec deploy/postgres -- psql -U Naga -d db -c "SELECT * FROM records WHERE name='test'"` | Record `test` is found in DB |
+| APP-002 | Verify app responds via port-forward | 1. Run `kubectl port-forward svc/python-app-service -n db 5000:5000 &` 2. Wait 5 seconds 3. Run `curl http://localhost:5000/` | App returns valid response |
 

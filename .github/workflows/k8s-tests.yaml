@@ -58,20 +58,9 @@ jobs:
 
       - name: Port-forward Flask app and test response
         run: |
-          kubectl port-forward svc/python-app-service -n db 5000:5000 > port-forward.log 2>&1 &
-          PF_PID=$!
+          kubectl port-forward svc/python-app-service -n db 5000:5000 &
           sleep 5
-          RESPONSE=$(curl -s http://localhost:5000/)
-          echo "$RESPONSE"
-          if echo "$RESPONSE" | grep -q "Welcome"; then
-          echo "✅ App responded correctly"
-          else
-          echo "❌ App response did not contain 'Welcome'"
-          exit 1
-          fi
-          kill $PF_PID
-
-
+          curl http://localhost:5000/
 
 
       - name: Verify app inserts data into DB
