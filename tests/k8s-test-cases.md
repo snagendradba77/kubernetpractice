@@ -1,4 +1,4 @@
-## Kubernetes Project Test Cases
+# Kubernetes Project Test Cases
 
 ## Cluster Tests
 | Test Case ID | Title | Steps | Expected Result |
@@ -17,11 +17,12 @@
 | Test Case ID | Title | Steps | Expected Result |
 |--------------|-------|-------|-----------------|
 | DB-001 | Verify PostgreSQL pod is running | Run `kubectl get pods -n db | grep postgres` | Pod status = Running |
-| DB-002 | Verify DB connection | Run `kubectl -n db exec deploy/postgres -- psql -U Naga -c "SELECT 1"` | Query returns `1` |
+| DB-002 | Verify DB connection | Run `kubectl -n db exec deploy/postgres -- psql -U Naga -d appdb -c "SELECT 1"` | Query returns `1` |
 
 ## Application Tests
 | Test Case ID | Title | Steps | Expected Result |
 |--------------|-------|-------|-----------------|
 | APP-001 | Verify service exposes app | Run `kubectl get svc -n db | grep python-app-service` | Service is listed |
 | APP-002 | Verify app responds via port-forward | 1. Run `kubectl port-forward svc/python-app-service -n db 5000:5000 &` 2. Wait 5 seconds 3. Run `curl http://localhost:5000/` | App returns valid response |
+| APP-003 | End-to-End test: Verify app inserts user into DB | 1. Run `kubectl port-forward svc/python-app-service -n db 5000:5000 &` and capture PID 2. Run `curl -X POST http://localhost:5000/insert_user -H "Content-Type: application/json" -d '{"username":"testuser","email":"testuser@example.com"}'` 3. Run `kubectl -n db exec deploy/postgres -- psql -U Naga -d appdb -c "SELECT * FROM users WHERE username='testuser'"` 4. Kill port-forward with `kill $PF_PID` | Record `testuser` is found in DB |
 
