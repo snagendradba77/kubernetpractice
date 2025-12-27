@@ -1,4 +1,4 @@
-# Kubernetes Project Test Cases1
+# Kubernetes Project Test Cases
 
 ## Cluster Tests
 | Test Case ID | Title | Steps | Expected Result |

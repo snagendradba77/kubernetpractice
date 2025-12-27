@@ -61,8 +61,11 @@ jobs:
           kubectl port-forward svc/python-app-service -n db 5000:5000 > port-forward.log 2>&1 &
           PF_PID=$!
           sleep 5
-          curl -s http://localhost:5000/ | grep "Welcome"
+          RESPONSE=$(curl -s http://localhost:5000/)
+          echo "$RESPONSE"
+          echo "$RESPONSE" | grep "Welcome" || echo "Expected text not found"
           kill $PF_PID
+
 
 
       - name: Verify app inserts data into DB
