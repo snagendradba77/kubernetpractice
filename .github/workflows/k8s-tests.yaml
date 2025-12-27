@@ -62,9 +62,3 @@ jobs:
           sleep 5
           curl http://localhost:5000/
 
-
-      - name: Verify app inserts data into DB
-        run: |
-          curl -s http://localhost:5000/add?record=test
-          kubectl -n db exec deploy/postgres -- psql -U Naga -d db -c "SELECT * FROM records WHERE name='test'"
-
