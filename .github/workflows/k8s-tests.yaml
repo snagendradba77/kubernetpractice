@@ -58,9 +58,12 @@ jobs:
 
       - name: Port-forward Flask app and test response
         run: |
-          kubectl port-forward svc/python-app-service -n db 5000:5000 &
+          kubectl port-forward svc/python-app-service -n db 5000:5000 > port-forward.log 2>&1 &
+          PF_PID=$!
           sleep 5
           curl -s http://localhost:5000/ | grep "Welcome"
+          kill $PF_PID
+
 
       - name: Verify app inserts data into DB
         run: |
