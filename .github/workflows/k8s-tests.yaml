@@ -1,0 +1,63 @@
+name: Kubernetes Project Test Cases
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'tests/**'
+  workflow_dispatch:
+
+jobs:
+  k8s-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        run: |
+          echo "$KUBECONFIG_CONTENT" > $HOME/.kube/config
+
+      # 🔹 Cluster Tests
+      - name: Verify cluster nodes are healthy
+        run: kubectl get nodes
+
+      - name: Verify namespace exists
+        run: kubectl get namespaces | grep db
+
+      # 🔹 Storage Tests
+      - name: Verify PersistentVolume is bound
+        run: kubectl get pv | grep Bound
+
+      - name: Verify PVC is attached
+        run: kubectl get pvc -n db | grep Bound
+
+      # 🔹 Database Tests
+      - name: Verify PostgreSQL pod is running
+        run: kubectl get pods -n db | grep postgres
+
+      - name: Verify DB connection
+        run: kubectl -n db exec deploy/postgres -- psql -U Naga -c "SELECT 1"
+
+      # 🔹 Application Tests
+      - name: Verify service exposes app
+        run: kubectl get svc -n db | grep python-app-service
+
+      - name: Port-forward Flask app and test response
+        run: |
+          kubectl port-forward svc/python-app-service -n db 5000:5000 &
+          sleep 5
+          curl -s http://localhost:5000/ | grep "Welcome"
+
+      - name: Verify app inserts data into DB
+        run: |
+          curl -s http://localhost:5000/add?record=test
+          kubectl -n db exec deploy/postgres -- psql -U Naga -d db -c "SELECT * FROM records WHERE name='test'"
+
