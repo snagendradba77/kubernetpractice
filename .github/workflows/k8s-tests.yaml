@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - dev
-    paths:
-      - 'tests/**'
+
   workflow_dispatch:
 
 jobs:
