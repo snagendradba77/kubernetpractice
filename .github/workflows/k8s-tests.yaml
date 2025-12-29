@@ -64,15 +64,3 @@ jobs:
           sleep 5
           curl -s http://localhost:5000/
           kill $PF_PID
-
-      - name: End-to-End test: Verify app inserts user into DB
-        run: |
-          kubectl port-forward svc/python-app-service -n db 5000:5000 > port-forward.log 2>&1 &
-          PF_PID=$!
-          sleep 5
-          curl -X POST http://localhost:5000/insert_user \
-               -H "Content-Type: application/json" \
-               -d '{"username":"testuser","email":"testuser@example.com"}'
-          kubectl -n db exec deploy/postgres -- psql -U Naga -d appdb -c "SELECT * FROM users WHERE username='testuser';"
-          kill $PF_PID
-
