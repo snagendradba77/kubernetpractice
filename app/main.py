@@ -17,10 +17,14 @@ def get_connection():
 
 @app.route("/healthz")
 def healthz():
+        return "OK", 200
+
+    @app.route("/readyz")
+def readyz():
     try:
         conn = get_connection()
         conn.close()
-        return "OK", 200
+        return "READY", 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
