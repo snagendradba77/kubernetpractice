@@ -9,7 +9,7 @@ app = Flask(__name__)
 def get_connection():
     return psycopg2.connect(
         host="postgres.db.svc.cluster.local",
-        port=5432,  # ✅ matches your Service definition
+        port=5432,
         database="appdb",
         user=os.getenv("POSTGRES_USER"),
         password=os.getenv("POSTGRES_PASSWORD")
@@ -17,16 +17,21 @@ def get_connection():
 
 @app.route("/healthz")
 def healthz():
+    try:
+        conn = get_connection()
+        conn.close()
         return "OK", 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    @app.route("/readyz")
+@app.route("/readyz")
 def readyz():
     try:
         conn = get_connection()
         conn.close()
         return "READY", 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except Exception:
+        return "NOT READY", 500
 
 @app.route("/")
 def hello():
@@ -55,7 +60,7 @@ def insert_user():
         conn.commit()
         cur.close()
         conn.close()
-        return jsonify({"status": "success", "username": username, "email": email}), 201
+        return jsonify({"status": "success"}), 201
     except psycopg2.IntegrityError:
         return jsonify({"error": "email must be unique"}), 409
     except psycopg2.Error as e:
@@ -71,19 +76,24 @@ def list_users():
     conn.close()
 
     return jsonify([
-        {"id": r[0], "username": r[1], "email": r[2], "created_at": r[3].isoformat()}
+        {
+            "id": r[0],
+            "username": r[1],
+            "email": r[2],
+            "created_at": r[3].isoformat()
+        }
         for r in rows
     ])
 
 @app.route("/form", methods=["GET"])
 def form():
-    return '''
-        <form action="/insert_user" method="post">
-            <input name="username" placeholder="Username">
-            <input name="email" placeholder="Email">
-            <button type="submit">Add User</button>
-        </form>
-    '''
+    return """
+    <form action="/insert_user" method="post">
+        <input name="username" placeholder="Username">
+        <input name="email" placeholder="Email">
+        <button type="submit">Add User</button>
+    </form>
+    """
 
 if __name__ == "__main__":
     print("Starting Flask on 0.0.0.0:5000")

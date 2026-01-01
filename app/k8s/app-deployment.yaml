@@ -1,4 +1,3 @@
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,7 +16,7 @@ spec:
       containers:
       - name: python-app
         image: snagendradba77/python-app:latest
-        imagePullPolicy: Always  
+        imagePullPolicy: Always
         ports:
           - containerPort: 5000
         env:
@@ -39,7 +38,7 @@ spec:
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /readyz
+            path: /healthz
             port: 5000
           initialDelaySeconds: 15
           periodSeconds: 10
