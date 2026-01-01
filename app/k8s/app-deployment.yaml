@@ -36,11 +36,11 @@ spec:
             path: /healthz
             port: 5000
           initialDelaySeconds: 10
-          periodSeconds: 30
+          periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /healthz
+            path: /readyz
             port: 5000
-          initialDelaySeconds: 5
+          initialDelaySeconds: 15
           periodSeconds: 10
 
