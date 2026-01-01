@@ -1,56 +1,45 @@
-# This is Postgresql deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres
+  name: python-app
   namespace: db
 spec:
-  replicas: 1   # only one pod to avoid data corruption
+  replicas: 2
   selector:
     matchLabels:
-      app: postgres
+      app: python-app
   template:
     metadata:
       labels:
-        app: postgres
+        app: python-app
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: node-role.kubernetes.io/control-plane
-                    operator: DoesNotExist
       containers:
-      - name: postgres
-        image: postgres:15
+      - name: python-app
+        image: snagendradba77/python-app:latest
+        imagePullPolicy: Always
         ports:
-          - containerPort: 5432
+          - containerPort: 5000
         env:
           - name: POSTGRES_USER
-            value: "Naga"   # set the database superuser
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secret
+                key: POSTGRES_USER
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: postgres-secret
                 key: POSTGRES_PASSWORD
-        volumeMounts:
-          - name: postgres-storage
-            mountPath: /var/lib/postgresql/data
-        readinessProbe:
-          exec:
-            command: ["pg_isready","-U","Naga","-p","5432"]
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
           initialDelaySeconds: 10
           periodSeconds: 10
-          failureThreshold: 5
-        livenessProbe:
-          exec:
-            command: ["pg_isready","-U","Naga","-p","5432"]
-          initialDelaySeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 5000
+          initialDelaySeconds: 15
           periodSeconds: 10
-          failureThreshold: 5
-      volumes:
-        - name: postgres-storage
-          persistentVolumeClaim:
-            claimName: postgres-pvc
 
